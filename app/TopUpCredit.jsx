@@ -3,7 +3,6 @@ import React, { useEffect,useState } from "react";
 import { useNavigation, useRouter } from 'expo-router';
 import { Ionicons } from "@expo/vector-icons";
 import {onAuthStateChanged} from 'firebase/auth'
-import Axios from "axios";
 import {auth,db} from '../configs/FirebaseConfig'
 import {
   collection,
@@ -12,7 +11,7 @@ import {
   onSnapshot,
   doc, updateDoc,addDoc
 } from "firebase/firestore";
-
+import {PayWithFlutterwave} from 'flutterwave-react-native';
 const TopUpCredit=()=> {
     const navigation = useNavigation();
     const [amount, setAmount] = useState('')
@@ -20,7 +19,7 @@ const TopUpCredit=()=> {
     const [gettingSelf, setGettingSelf] = useState(false)
     const [sending, setSending] = useState(false)
     const [error, setError] = useState('');
-    const router =useRouter()
+  
     useEffect(() => {
         navigation.setOptions({
           headerShown: true,
@@ -53,55 +52,68 @@ const TopUpCredit=()=> {
         };
       },[])
       const handlePress = async() => {
-        if (amount.trim() === '') {
-          ToastAndroid.show('Amount is required',ToastAndroid.LONG)  
-        } else {
-          setError('');
-             const date = new Date();
-             const clientRef = `${details.firstName}${details.lastName}${date.getTime()}`;
-             Axios.post(
-              "https://payproxyapi.hubtel.com/items/initiate",
-              {
-                totalAmount: amount,
-                description: "Solar credit payment",
-                callbackUrl:
-                  "https://solar-taxi-services.appspot.com/api/v1/transactions/callback",
-                returnUrl: "http://solartaxi.co",
-                merchantAccountNumber: "89343",
-                cancellationUrl: "http://solartaxi.co",
-                clientReference: clientRef
-              },
-              {
-                auth: {
-                  username: "026rPJX",
-                  password: "887ad3b11cc6478f8a4e14d42be86040"
-                }
-              }
-             )
-               .then(async response => {
-                console.log(response)
-                // try{
-                //   await addDoc(collection(db, "transactions"), {
-                //     timeStamps: serverTimestamp(),
-                //     Status:"Success",
-                //     uid: details.uid,
-                //     data:response.data
-                //   });
-                // }catch(err){
-                //   console.log(error)
-                // }
-          //        const docRef=query(collection(db, "passengers"),where("uid", "==",details.uid));
-          //  await updateDoc(docRef,{
-          //    clientReference: clientRef,
-          //    solarCredit:amount
-          //  })
-               })
-               .catch(err => {
-                 console.log("error:" + err);
-               });
-           }
+        // if (amount.trim() === '') {
+        //   ToastAndroid.show('Amount is required',ToastAndroid.LONG)  
+        // } else {
+        //   setError('');
+        //      const date = new Date();
+        //      const clientRef = `${details.firstName}${details.lastName}${date.getTime()}`;
+        //      Axios.post(
+        //       "https://payproxyapi.hubtel.com/items/initiate",
+        //       {
+        //         totalAmount: amount,
+        //         description: "Solar credit payment",
+        //         callbackUrl:
+        //           "https://solar-taxi-services.appspot.com/api/v1/transactions/callback",
+        //         returnUrl: "http://solartaxi.co",
+        //         merchantAccountNumber: "89343",
+        //         cancellationUrl: "http://solartaxi.co",
+        //         clientReference: clientRef
+        //       },
+        //       {
+        //         auth: {
+        //           username: "026rPJX",
+        //           password: "887ad3b11cc6478f8a4e14d42be86040"
+        //         }
+        //       }
+        //      )
+        //        .then(async response => {
+        //         console.log(response)
+        //         // try{
+        //         //   await addDoc(collection(db, "transactions"), {
+        //         //     timeStamps: serverTimestamp(),
+        //         //     Status:"Success",
+        //         //     uid: details.uid,
+        //         //     data:response.data
+        //         //   });
+        //         // }catch(err){
+        //         //   console.log(error)
+        //         // }
+        //   //        const docRef=query(collection(db, "passengers"),where("uid", "==",details.uid));
+        //   //  await updateDoc(docRef,{
+        //   //    clientReference: clientRef,
+        //   //    solarCredit:amount
+        //   //  })
+        //        })
+        //        .catch(err => {
+        //          console.log("error:" + err);
+        //        });
+        //    }
       };
-
+      const generateTransactionRef = (length) => {
+        var result = '';
+        var characters =
+          'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        var charactersLength = characters.length;
+        for (var i = 0; i < length; i++) {
+          result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return `flw_tx_ref_${result}`;
+      };
+      const handleOnRedirect = (data) => {
+        console.log(data);
+      };
+      
   return (
     <View
     style={{
@@ -127,7 +139,7 @@ const TopUpCredit=()=> {
           <Ionicons name="cash" size={20} color="#3D8ABE" />
           <TextInput
             keyboardType="tel"
-            placeholder="Enter Amount in GHs"
+            placeholder="Enter Amount in GHc"
             placeholderTextColor="#3D8ABE"
             style={[styles.input, error ? styles.errorBorder : null]}
            onChangeText={(value) => setAmount(value)}
@@ -144,22 +156,31 @@ const TopUpCredit=()=> {
           gettingSelf ? <Text style={{
             display:'none'
           }}></Text> :
-        <TouchableOpacity
-        disabled={sending}
-        onPress={handlePress} 
-            style={{
-                padding: 20,
-                width: 300,
-                backgroundColor: "#3D8ABE",
-                borderRadius: 20,
-                marginBottom: 20,
-            }}
-            >
-                {
-            sending ? <ActivityIndicator 
-            size={"large"}
-            color={'#3D8ABE'}
-            />: <Text
+        <PayWithFlutterwave
+  onRedirect={handleOnRedirect}
+  options={{
+    tx_ref: generateTransactionRef(10),
+    authorization: 'FLWPUBK_TEST-3b4f6d066955192f3617234c9eeea393-X',
+    customer: {
+      email: "test@gmail.com"
+    },
+    amount: 10,
+    currency: 'GHS',
+    payment_options: 'mobilemoneyghana'
+  }}
+  customButton={(props) => (
+    <TouchableOpacity
+    style={{
+              padding: 20,
+              width: 300,
+              backgroundColor: "#3D8ABE",
+              borderRadius: 20,
+              marginBottom: 20,
+          }}
+      onPress={props.onPress}
+      isBusy={props.isInitializing}
+      disabled={props.disabled}>
+        <Text
               style={{
                   color: "white",
                   fontSize: 20,
@@ -169,8 +190,9 @@ const TopUpCredit=()=> {
                 >
               Buy Credits
             </Text>
-            }
-          </TouchableOpacity>
+    </TouchableOpacity>
+  )}
+/>
 }
         </View>
       </View>
@@ -178,7 +200,7 @@ const TopUpCredit=()=> {
   )
 }
 
-export default TopUpCredit
+export default TopUpCredit;
 
 const styles = StyleSheet.create({
     wrapper: {
@@ -205,4 +227,4 @@ const styles = StyleSheet.create({
       color: 'red',
       marginBottom: 10,
     },
-  });
+  })
