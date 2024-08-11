@@ -62,8 +62,8 @@ const GetallTrips = ({trips}) => {
             </Text>
           </View>
         </View>
-          <View>
-            <Text>Status: {trips.requestStatus}</Text>
+          <View style={{paddingLeft:20}}>
+            <Text style={{color:"orange"}}>Status: {trips.requestStatus}</Text>
           </View>
     </View>
 

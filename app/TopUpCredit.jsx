@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, ToastAndroid } from 'react-native'
 import React, { useEffect,useState } from "react";
 import { useNavigation, useRouter } from 'expo-router';
 import { Ionicons } from "@expo/vector-icons";
@@ -9,14 +9,14 @@ import {
   query,
   where,
   onSnapshot,
-  doc, updateDoc,addDoc
+  addDoc,serverTimestamp
 } from "firebase/firestore";
 import {PayWithFlutterwave} from 'flutterwave-react-native';
 const TopUpCredit=()=> {
     const navigation = useNavigation();
     const [amount, setAmount] = useState('')
     const [details, setDetails] = useState()
-    const [gettingSelf, setGettingSelf] = useState(false)
+    const [gettingSelf, setGettingSelf] = useState(true)
     const [sending, setSending] = useState(false)
     const [error, setError] = useState('');
   
@@ -29,7 +29,6 @@ const TopUpCredit=()=> {
       useEffect(()=>{
         const unsubscribe = onAuthStateChanged(auth, (user) => {
           const id = user.uid
-          setGettingSelf(true)
           const q1 = query(collection(db, "passengers"),where("uid", "==", id));
           const unsubscribeSnapshot = onSnapshot(q1, (snapShot) => {
             try{
@@ -108,10 +107,37 @@ const TopUpCredit=()=> {
         for (var i = 0; i < length; i++) {
           result += characters.charAt(Math.floor(Math.random() * charactersLength));
         }
-        return `flw_tx_ref_${result}`;
+        return `${result}`;
       };
-      const handleOnRedirect = (data) => {
+      const handleOnRedirect = async (data) => {
         console.log(data);
+        if (data.status == "cancelled"){
+          try {
+            await addDoc(collection(db, "transactions"), {
+              createdAt: serverTimestamp(),
+              status:data.status,
+              userID:details.uid,
+              amount:0,
+              data:{data}
+            });
+            ToastAndroid.show("Transaction cancelled", ToastAndroid.LONG);
+          } catch (error) {
+            console.log("Error adding document: ", error);
+          }
+        }else{
+          try {
+            await addDoc(collection(db, "transactions"), {
+              createdAt: serverTimestamp(),
+              status:data.status,
+              userID:details.uid,
+              amount:amount,
+              data:{data}
+            });
+            ToastAndroid.show("Transaction Successfully", ToastAndroid.LONG);
+          } catch (error) {
+            console.log("Error adding document: ", error);
+          }
+        }
       };
       
   return (
@@ -125,7 +151,11 @@ const TopUpCredit=()=> {
         flex:1
       }}
     >
-         <View
+        {gettingSelf ? <ActivityIndicator 
+        size={"large"}
+        color={'#3D8ABE'}
+        />
+      : <View
       style={{
         padding: 10,
         width: "100%",
@@ -162,9 +192,9 @@ const TopUpCredit=()=> {
     tx_ref: generateTransactionRef(10),
     authorization: 'FLWPUBK_TEST-3b4f6d066955192f3617234c9eeea393-X',
     customer: {
-      email: "test@gmail.com"
+      email: details.email
     },
-    amount: 10,
+    amount: parseInt(amount),
     currency: 'GHS',
     payment_options: 'mobilemoneyghana'
   }}
@@ -196,6 +226,7 @@ const TopUpCredit=()=> {
 }
         </View>
       </View>
+      }
     </View>
   )
 }

@@ -12,18 +12,18 @@ import TransactionsCard from '../transactions/transactionsCard';
 
 const GetTransactions = () => {
     const [gettingSelf, setGettingSelf] = useState(true)
-    const [details, setDetails] = useState()
+    const [details, setDetails] = useState([])
     useEffect(()=>{
         const unsubscribe = onAuthStateChanged(auth, (user) => {
           const id = user.uid
+          setDetails([])
           setGettingSelf(true)
           const q1 = query(collection(db, "transactions"),where("userID", "==", id));
           const unsubscribeSnapshot = onSnapshot(q1, (snapShot) => {
             try{
               snapShot.docs.forEach((doc) => {
-                list=(doc.data())
-              });
-              setDetails(list);
+                setDetails(prev=>[...prev,{id:doc.id, ...doc.data()}])
+              }); 
               console.log(details)
               setGettingSelf(false)
             }catch(error){
@@ -45,7 +45,7 @@ const GetTransactions = () => {
         <Text style={{fontSize:25, fontWeight:"bold",textAlign:"center", color:"#3D8ABE"}}>All Transactions</Text>
         <View style={{
           width:"100%",
-          marginTop:10
+          marginTop:10,
         }}>
           {
       gettingSelf ? 
@@ -63,6 +63,9 @@ const GetTransactions = () => {
       }}
       >
         <FlatList 
+        style={{
+          width:"100%",
+        }}
         data={details}
         renderItem={({item,id})=>(
           <TransactionsCard 
