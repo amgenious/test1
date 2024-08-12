@@ -23,11 +23,12 @@ const HomeScreen = () => {
     >
       <Text
       style={{
-        fontSize:25,
+        fontSize:30,
+        fontWeight:"bold",
         marginBottom:20,
         color:"#3D8ABE"
       }}
-      >Go to Home</Text>
+      >Welcome Back</Text>
       <TouchableOpacity
       onPress={()=>router.push('home')}
       style={{

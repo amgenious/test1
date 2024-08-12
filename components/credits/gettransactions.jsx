@@ -24,7 +24,6 @@ const GetTransactions = () => {
               snapShot.docs.forEach((doc) => {
                 setDetails(prev=>[...prev,{id:doc.id, ...doc.data()}])
               }); 
-              console.log(details)
               setGettingSelf(false)
             }catch(error){
               setGettingSelf(false)
@@ -42,7 +41,6 @@ const GetTransactions = () => {
       },[])
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{fontSize:25, fontWeight:"bold",textAlign:"center", color:"#3D8ABE"}}>All Transactions</Text>
         <View style={{
           width:"100%",
           marginTop:10,

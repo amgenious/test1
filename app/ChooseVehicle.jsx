@@ -149,7 +149,11 @@ return () => {
 const checkpaidstatus = async()=>{
   if (checked === 'SolarCredit' && details.solarCredit === 0){
     setModal(true)  
-  }else{
+  }
+  else if(checked === 'SolarCredit' && details.solarCredit < newprice){
+    setModal(true)  
+  }
+  else{
     goSolar()
   }
 }

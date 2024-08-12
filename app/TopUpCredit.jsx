@@ -14,7 +14,7 @@ import {
 import {PayWithFlutterwave} from 'flutterwave-react-native';
 const TopUpCredit=()=> {
     const navigation = useNavigation();
-    const [amount, setAmount] = useState('')
+    const [amount, setAmount] = useState(0)
     const [details, setDetails] = useState()
     const [gettingSelf, setGettingSelf] = useState(true)
     const [sending, setSending] = useState(false)
@@ -23,7 +23,13 @@ const TopUpCredit=()=> {
     useEffect(() => {
         navigation.setOptions({
           headerShown: true,
-          headerTitle:'Top Up Credit'
+          headerTitle:'Top Up Credit',
+          headerTitleStyle: {
+            color: '#3D8ABE', 
+            fontSize: 30, 
+            fontWeight: 'bold',
+          },
+          headerTintColor: '#FFB41A',
         });
       }, []);
       useEffect(()=>{
@@ -50,55 +56,6 @@ const TopUpCredit=()=> {
           unsubscribe();
         };
       },[])
-      const handlePress = async() => {
-        // if (amount.trim() === '') {
-        //   ToastAndroid.show('Amount is required',ToastAndroid.LONG)  
-        // } else {
-        //   setError('');
-        //      const date = new Date();
-        //      const clientRef = `${details.firstName}${details.lastName}${date.getTime()}`;
-        //      Axios.post(
-        //       "https://payproxyapi.hubtel.com/items/initiate",
-        //       {
-        //         totalAmount: amount,
-        //         description: "Solar credit payment",
-        //         callbackUrl:
-        //           "https://solar-taxi-services.appspot.com/api/v1/transactions/callback",
-        //         returnUrl: "http://solartaxi.co",
-        //         merchantAccountNumber: "89343",
-        //         cancellationUrl: "http://solartaxi.co",
-        //         clientReference: clientRef
-        //       },
-        //       {
-        //         auth: {
-        //           username: "026rPJX",
-        //           password: "887ad3b11cc6478f8a4e14d42be86040"
-        //         }
-        //       }
-        //      )
-        //        .then(async response => {
-        //         console.log(response)
-        //         // try{
-        //         //   await addDoc(collection(db, "transactions"), {
-        //         //     timeStamps: serverTimestamp(),
-        //         //     Status:"Success",
-        //         //     uid: details.uid,
-        //         //     data:response.data
-        //         //   });
-        //         // }catch(err){
-        //         //   console.log(error)
-        //         // }
-        //   //        const docRef=query(collection(db, "passengers"),where("uid", "==",details.uid));
-        //   //  await updateDoc(docRef,{
-        //   //    clientReference: clientRef,
-        //   //    solarCredit:amount
-        //   //  })
-        //        })
-        //        .catch(err => {
-        //          console.log("error:" + err);
-        //        });
-        //    }
-      };
       const generateTransactionRef = (length) => {
         var result = '';
         var characters =
@@ -110,14 +67,14 @@ const TopUpCredit=()=> {
         return `${result}`;
       };
       const handleOnRedirect = async (data) => {
-        console.log(data);
         if (data.status == "cancelled"){
           try {
             await addDoc(collection(db, "transactions"), {
               createdAt: serverTimestamp(),
               status:data.status,
               userID:details.uid,
-              amount:0,
+              amount:parseInt(amount),
+              credit:0,
               data:{data}
             });
             ToastAndroid.show("Transaction cancelled", ToastAndroid.LONG);
@@ -130,7 +87,8 @@ const TopUpCredit=()=> {
               createdAt: serverTimestamp(),
               status:data.status,
               userID:details.uid,
-              amount:amount,
+              amount: parseInt(amount),
+              credit: parseInt(amount),
               data:{data}
             });
             ToastAndroid.show("Transaction Successfully", ToastAndroid.LONG);
@@ -139,7 +97,7 @@ const TopUpCredit=()=> {
           }
         }
       };
-      
+      const isAmountValid = amount !== '' && parseInt(amount) > 9;  
   return (
     <View
     style={{
@@ -162,19 +120,15 @@ const TopUpCredit=()=> {
         paddingTop:30
       }}
       >
-      <Text
-      style={{fontSize:30, fontWeight:"bold", color: "#3D8ABE", textAlign:"center",marginBottom:20}}
-      >Top Up Credit</Text>
         <View style={styles.wrapper}>
           <Ionicons name="cash" size={20} color="#3D8ABE" />
           <TextInput
             keyboardType="tel"
             placeholder="Enter Amount in GHc"
             placeholderTextColor="#3D8ABE"
-            style={[styles.input, error ? styles.errorBorder : null]}
+            style={styles.input}
            onChangeText={(value) => setAmount(value)}
           />
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
         </View>
         <View
         style={{
@@ -203,13 +157,13 @@ const TopUpCredit=()=> {
     style={{
               padding: 20,
               width: 300,
-              backgroundColor: "#3D8ABE",
+              backgroundColor: isAmountValid ? '#3D8ABE' : '#9BBED1',
               borderRadius: 20,
               marginBottom: 20,
           }}
       onPress={props.onPress}
       isBusy={props.isInitializing}
-      disabled={props.disabled}>
+      disabled={!isAmountValid || props.disabled}>
         <Text
               style={{
                   color: "white",
@@ -249,13 +203,7 @@ const styles = StyleSheet.create({
     },
     input: {
       width: '90%',
-    },
-    errorBorder: {
-      borderWidth:1,
-      borderColor: 'red',
-    },
-    errorText: {
-      color: 'red',
-      marginBottom: 10,
+      height:'90%',
+      paddingLeft:2,
     },
   })

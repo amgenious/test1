@@ -24,7 +24,7 @@ const GetBalance = () => {
                 list=(doc.data())
               });
               setDetails(list);
-              setCreditAmount(details.solarCredit)
+              setCreditAmount(list.solarCredit)
               setGettingSelf(false)
             }catch(error){
               setGettingSelf(false)
@@ -65,11 +65,7 @@ const GetBalance = () => {
           width: "100%",
           paddingTop:30
         }}
-        >
-        <Text
-        style={{fontSize:30, fontWeight:"bold", color: "#3D8ABE", textAlign:"center",marginBottom:20}}
-        > Solar Credit</Text>
-                
+        >       
             <View
               style={{
                 marginTop:10,
@@ -90,11 +86,9 @@ const GetBalance = () => {
                 }}
               >
                 <Text style={styles.scp}>Credit</Text>
-               
                   <Text style={styles.credit}>
-                    {details.solarCredit}
+                    {creditAmount}
                   </Text>
-     
               </View>
               <View
                 style={{

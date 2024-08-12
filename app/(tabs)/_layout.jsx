@@ -33,6 +33,12 @@ const TabLayout = () => {
         tabBarIcon:({color}) =><Ionicons name="cash" size={24} color={color} />
         }}
     />
+    <Tabs.Screen 
+    name='Transactions'
+    options={{tabBarLabel:'Transactions',
+        tabBarIcon:({color}) =><Ionicons name="infinite" size={24} color={color} />
+        }}
+    />
    </Tabs>
   )
 }

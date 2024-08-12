@@ -10,6 +10,7 @@ import {
 } from "firebase/firestore";
 import {auth,db} from '../../configs/FirebaseConfig'
 import GetallTrips from '../../components/trips/getalltrips';
+import { useNavigation } from 'expo-router';
 const Trips = () => {
   const [details, setDetails] = useState([])
   const [loading, setLoading] = useState(true)
@@ -38,6 +39,18 @@ return () => {
   unsubscribe();
 };
 },[])
+const navigation = useNavigation();
+useEffect(() => {
+  navigation.setOptions({
+    headerShown: true,
+    headerTitle:'My Trips',
+    headerTitleStyle: {
+      color: '#3D8ABE', 
+      fontSize: 30, 
+      fontWeight: 'bold',
+    },
+  });
+}, []);
   return (
     <View
     style={{
@@ -48,11 +61,7 @@ return () => {
       flex:1,
       padding:10,
     }}
-    >
-      <Text
-      style={{fontSize:30, fontWeight:"bold", color: "#3D8ABE",marginBottom:20}}
-      >My Trips</Text>
-     
+    >   
       <View
        style={{
         padding: 10,
