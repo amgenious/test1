@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     },
     input: {
       width: '90%',
-      height:'90%',
-      paddingLeft:2,
+      height:'130%',
+      paddingLeft:5,
     },
   })

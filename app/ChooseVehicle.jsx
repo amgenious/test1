@@ -141,7 +141,7 @@ return () => {
       setSearching(false);
       ToastAndroid.show('No driver Responded',ToastAndroid.LONG)
       datatobase()
-    }, 40000); 
+    }, 10000); 
     return () => clearTimeout(timer);
   },[])
 
