@@ -139,19 +139,22 @@ return () => {
   useEffect(()=>{
     const timer = setTimeout(() => {
       setSearching(false);
-      ToastAndroid.show('No driver Responded',ToastAndroid.LONG)
-      datatobase()
+      if (searching == false){
+      }else{
+        ToastAndroid.show('No driver Responded',ToastAndroid.LONG)
+        datatobase()
+      }
     }, 10000); 
     return () => clearTimeout(timer);
   },[])
 
 
 const checkpaidstatus = async()=>{
-  if (checked === 'SolarCredit' && details.solarCredit === 0){
+  if(checked === 'SolarCredit' && details.solarCredit < newprice){
     setModal(true)  
-  }
-  else if(checked === 'SolarCredit' && details.solarCredit < newprice){
-    setModal(true)  
+    console.log("passed here")
+    setSending(false)
+    setSearching(false);
   }
   else{
     goSolar()
