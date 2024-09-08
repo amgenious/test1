@@ -337,7 +337,9 @@ const newprice = parseFloat(distance) * parseFloat(duration)
         }}></View>
       )
 }
-     {/* { ratingLoad ?
+     {/* 
+     This commented code displays the popup for the user to rate the trip after the trip is done
+     { ratingLoad ?
       <View style={{
         position: "absolute",
         zIndex: 15,
