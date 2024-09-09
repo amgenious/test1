@@ -25,14 +25,14 @@ export default function ChooseVehicle() {
   const [loading, setLoading] = useState(false)
   const [sending, setSending] = useState(false)
   const [gettingSelf, setGettingSelf] = useState(false)
-  const [details, setDetails] = useState()
+  const [details, setDetails] = useState('')
   const [drivers, setDrivers] = useState()
   const [distance, setDistance] = useState('');
   const [duration, setDuration] = useState('');
   const [checked, setChecked] = useState('');
   const [model, setModal] = useState(false);
   const { destinationname, destinationlat, destinationlng, pickupname, pickuplat, pickuplng } = useLocalSearchParams();
-
+  var list
   useEffect(() => {
   }, [destinationname, destinationlat, destinationlng, pickupname, pickuplat, pickuplng]);
   
@@ -138,19 +138,18 @@ return () => {
   };
   useEffect(()=>{
     const timer = setTimeout(() => {
+      ToastAndroid.show('No driver Responded',ToastAndroid.LONG)
+      datatobase()
       setSearching(false);
-      if (searching == false){
-      }else{
-        ToastAndroid.show('No driver Responded',ToastAndroid.LONG)
-        datatobase()
-      }
+      setSending(false);
+     
     }, 10000); 
     return () => clearTimeout(timer);
   },[])
 
 
 const checkpaidstatus = async()=>{
-  if(checked === 'SolarCredit' && details.solarCredit < newprice){
+  if(checked === 'SolarCredit' && list.solarCredit < newprice){
     setModal(true)  
     console.log("passed here")
     setSending(false)
@@ -174,12 +173,11 @@ const newprice = parseFloat(distance) * parseFloat(duration)
        setModal(false)
     }
     const datatobase = async()=>{
-      
       setSending(true)
       try{
         await addDoc(collection(db,'passengerRequests'),{
           timeStamps: serverTimestamp(),
-          clientID:details.uid,
+          clientID:list.uid,
           destination:{
             name:destinationname,
             location:{
@@ -206,10 +204,10 @@ const newprice = parseFloat(distance) * parseFloat(duration)
             status:"cancelled"
           }],
           userDetails:{
-            email:details.email,
-            firstName:details.firstName,
-            lastName:details.lastName,
-            phoneNumber:details.phoneNumber,
+            email:list.email,
+            firstName:list.firstName,
+            lastName:list.lastName,
+            phoneNumber:list.phoneNumber,
             profileImage:"",
           },
           driverDetails:{
@@ -437,7 +435,7 @@ const newprice = parseFloat(distance) * parseFloat(duration)
             <Ionicons name="person" size={15} color="#3D8ABE" />
             
           </View>
-          <Text style={{ color: "#3D8ABE" }}>GHS {newprice}</Text>
+          <Text style={{ color: "#3D8ABE" }}>GHS {parseFloat(newprice)}</Text>
         </View>
            
         <View

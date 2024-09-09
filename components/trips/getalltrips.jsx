@@ -4,6 +4,7 @@ import { View,Text,Image } from 'react-native'
 const GetallTrips = ({trips}) => {
   return (
     <View 
+    key={trips.uid}
     style={{
       height: 189,
       backgroundColor: "#fff",

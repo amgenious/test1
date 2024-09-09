@@ -21,9 +21,11 @@ const Trips = () => {
   const q1 = query(collection(db,"passengerRequests"),where("clientID", "==", email));
   const unsubscribeSnapshot = onSnapshot(q1, (snapShot) => {
     try{
-      snapShot.docs.forEach((doc) => {
-        setDetails(prev=>[...prev,{id:doc.id, ...doc.data()}])
-      });   
+      const newDetails = snapShot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })); 
+      setDetails(newDetails); 
       setLoading(false)
     }catch(error){
       setLoading(false)
@@ -77,10 +79,10 @@ useEffect(() => {
           :
           <FlatList 
           data={details}
-          renderItem={({item,id})=>(
+          keyExtractor={(item) => item.id}
+          renderItem={({item})=>(
             <GetallTrips 
             trips={item}
-            key={id}
             />
           )}
           />
