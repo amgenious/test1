@@ -8,7 +8,7 @@ import {
   collection,
   query,
   where,
-  onSnapshot,
+  onSnapshot, updateDoc,getDocs,doc,
   addDoc,serverTimestamp
 } from "firebase/firestore";
 import {PayWithFlutterwave} from 'flutterwave-react-native';
@@ -91,6 +91,14 @@ const TopUpCredit=()=> {
               credit: parseInt(amount),
               data:{data}
             });
+            const docQuery = query(collection(db, "passengers"), where("uid", "==", id));
+            const querySnapshot = await getDocs(docQuery);
+            querySnapshot.forEach(async (docSnapshot) => {
+              const docRef = doc(db, "passengers", docSnapshot.id);
+              await updateDoc(docRef, {
+                solarCredit: parseInt(amount),
+              });
+            });
             ToastAndroid.show("Transaction Successfully", ToastAndroid.LONG);
           } catch (error) {
             console.log("Error adding document: ", error);
@@ -144,7 +152,8 @@ const TopUpCredit=()=> {
   onRedirect={handleOnRedirect}
   options={{
     tx_ref: generateTransactionRef(10),
-    authorization: 'FLWPUBK_TEST-3b4f6d066955192f3617234c9eeea393-X',
+    // authorization: 'FLWPUBK_TEST-3b4f6d066955192f3617234c9eeea393-X',
+    authorization: process.env.EXPO_PUBLIC_FLUTTERWAVE_PUBLISHABLE_KEY,
     customer: {
       email: details.email
     },
