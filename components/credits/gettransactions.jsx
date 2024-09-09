@@ -21,9 +21,11 @@ const GetTransactions = () => {
           const q1 = query(collection(db, "transactions"),where("userID", "==", id));
           const unsubscribeSnapshot = onSnapshot(q1, (snapShot) => {
             try{
-              snapShot.docs.forEach((doc) => {
-                setDetails(prev=>[...prev,{id:doc.id, ...doc.data()}])
-              }); 
+              const newDetails = snapShot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+              })); 
+              setDetails(newDetails);
               setGettingSelf(false)
             }catch(error){
               setGettingSelf(false)
@@ -65,10 +67,10 @@ const GetTransactions = () => {
           width:"100%",
         }}
         data={details}
-        renderItem={({item,id})=>(
+        keyExtractor={(item) => item.id}
+        renderItem={({item})=>(
           <TransactionsCard 
           transactions={item}
-          key={id}
           />
         )}
         />

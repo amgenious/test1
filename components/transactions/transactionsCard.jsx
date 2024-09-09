@@ -10,7 +10,9 @@ const TransactionsCard = ({transactions}) => {
       return date.toUTCString(); 
   };
   return (
-    <View style={{
+    <View 
+    key= {transactions.data.data.tx_ref}
+    style={{
         width:"100%",
         padding:7,
         backgroundColor:"white",
