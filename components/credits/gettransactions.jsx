@@ -15,26 +15,32 @@ const GetTransactions = () => {
     const [details, setDetails] = useState([])
     useEffect(()=>{
         const unsubscribe = onAuthStateChanged(auth, (user) => {
-          const id = user.uid
-          setDetails([])
-          setGettingSelf(true)
-          const q1 = query(collection(db, "transactions"),where("userID", "==", id));
-          const unsubscribeSnapshot = onSnapshot(q1, (snapShot) => {
-            try{
-              const newDetails = snapShot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-              })); 
-              setDetails(newDetails);
-              setGettingSelf(false)
-            }catch(error){
-              setGettingSelf(false)
-              console.log(error)
-            }
-          });
-          return () => {
-            unsubscribeSnapshot();
-          };
+          if (user){
+
+            const id = user.uid
+            setDetails([])
+            setGettingSelf(true)
+            const q1 = query(collection(db, "transactions"),where("userID", "==", id));
+            const unsubscribeSnapshot = onSnapshot(q1, (snapShot) => {
+              try{
+                const newDetails = snapShot.docs.map((doc) => ({
+                  id: doc.id,
+                  ...doc.data(),
+                })); 
+                setDetails(newDetails);
+                setGettingSelf(false)
+              }catch(error){
+                setGettingSelf(false)
+                console.log(error)
+              }
+            });
+            return () => {
+              unsubscribeSnapshot();
+            };
+          }else {
+           
+            setDetails(null); 
+          }
               
         })
         return () => {

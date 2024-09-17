@@ -16,24 +16,29 @@ const GetBalance = () => {
     const [creditAmount, setCreditAmount] = useState()
     useEffect(()=>{
         const unsubscribe = onAuthStateChanged(auth, (user) => {
-          const id = user.uid
-          const q1 = query(collection(db, "passengers"),where("uid", "==", id));
-          const unsubscribeSnapshot = onSnapshot(q1, (snapShot) => {
-            try{
-              snapShot.docs.forEach((doc) => {
-                list=(doc.data())
-              });
-              setDetails(list);
-              setCreditAmount(list.solarCredit)
-              setGettingSelf(false)
-            }catch(error){
-              setGettingSelf(false)
-              console.log(error)
-            }
-          });
-          return () => {
-            unsubscribeSnapshot();
-          };
+          if (user){
+
+            const id = user.uid
+            const q1 = query(collection(db, "passengers"),where("uid", "==", id));
+            const unsubscribeSnapshot = onSnapshot(q1, (snapShot) => {
+              try{
+                snapShot.docs.forEach((doc) => {
+                  list=(doc.data())
+                });
+                setDetails(list);
+                setCreditAmount(list.solarCredit)
+                setGettingSelf(false)
+              }catch(error){
+                setGettingSelf(false)
+                console.log(error)
+              }
+            });
+            return () => {
+              unsubscribeSnapshot();
+            };
+          }else {
+            setDetails(null); 
+          }
               
         })
         return () => {

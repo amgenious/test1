@@ -16,25 +16,30 @@ const Trips = () => {
   const [loading, setLoading] = useState(true)
   useEffect(()=>{
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      const email = user.uid
-      setDetails([])
-  const q1 = query(collection(db,"passengerRequests"),where("clientID", "==", email));
-  const unsubscribeSnapshot = onSnapshot(q1, (snapShot) => {
-    try{
-      const newDetails = snapShot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })); 
-      setDetails(newDetails); 
-      setLoading(false)
-    }catch(error){
-      setLoading(false)
-      console.log(error)
-    }
-  });
-  return () => {
-    unsubscribeSnapshot();
-  };
+      if(user){
+
+        const email = user.uid
+        setDetails([])
+        const q1 = query(collection(db,"passengerRequests"),where("clientID", "==", email));
+        const unsubscribeSnapshot = onSnapshot(q1, (snapShot) => {
+          try{
+            const newDetails = snapShot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            })); 
+            setDetails(newDetails); 
+            setLoading(false)
+          }catch(error){
+            setLoading(false)
+            console.log(error)
+          }
+        });
+        return () => {
+          unsubscribeSnapshot();
+        };
+      }else {
+        setDetails(null);
+      }
       
 })
 return () => {

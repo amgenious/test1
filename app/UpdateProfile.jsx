@@ -26,6 +26,13 @@ const UpdateProfile=()=> {
   const [loading, setLoading] = useState(false);
   const [getloading, setGetLoading] = useState(false);
 
+  const [previousFirstName, setPreviousFirstName] = useState('')
+  const [previousLastName, setPreviousLastName] = useState('')
+  const [previousgender, setPreviousGender] = useState('')
+  const [previousphoneNumber, setPreviousPhoneNumber] = useState('')
+  const [previousemail, setPreviousEmail] = useState('')
+  const [userimge, setUserImageUrl] = useState('')
+
   useEffect(()=>{
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       const id = user.uid
@@ -36,6 +43,13 @@ const UpdateProfile=()=> {
           snapShot.docs.forEach((doc) => {
             list=(doc.data())
           });
+          setPreviousEmail(list.email)
+          setPreviousFirstName(list.firstName)
+          setPreviousLastName(list.lastName)
+          setPreviousGender(list.gender)
+          setPreviousPhoneNumber(list.phoneNumber)
+          setUserImageUrl(list.profileImage);
+          setLoading(false)
       });
       return () => {
         unsubscribeSnapshot();
@@ -58,43 +72,50 @@ return () => {
       setImageUri(result.assets[0].uri);
     }
   };
-  const onAddDetails =async()=>{
-    setLoading(true)
-    const fileName =Date.now().toString()+".jpg";
-    const resp = await fetch(imageUri);
-    const blob = await resp.blob()
-
-    const imageRef = ref(storage,'UserImages/'+fileName);
-    uploadBytes(imageRef,blob).then((snapShot)=>{
-      console.log("file uploaded")
-    }).then(resp =>{
-      getDownloadURL(imageRef).then(async(downloadUrl) => {
-        console.log(downloadUrl)
-        saveDetails(downloadUrl)
-      })
-    })
-    setLoading(false)
-  }
-  const saveDetails =async(imageUrl) => {
+  const onAddDetails = async () => {
     try {
-      // Query the collection to find the document with the specific userId
-      const q1 = query(collection(db, "passengers"), where("uid", "==", userId));
+      setLoading(true);
+      
+      if (imageUri) {
+        const fileName = Date.now().toString() + ".jpg";
+        const resp = await fetch(imageUri);
+        const blob = await resp.blob();
+        const imageRef = ref(storage, 'UserImages/' + fileName);
+        
+        
+        const snapShot = await uploadBytes(imageRef, blob);
+        console.log("Image uploaded");
+        
+        
+        const downloadUrl = await getDownloadURL(imageRef);
+        await saveDetails(downloadUrl); 
+      } else {
+       
+        await saveDetails(userimge); 
+      }
+      
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      ToastAndroid.show('An Error Occurred: ' + err.message, ToastAndroid.LONG);
+    } finally {
+      setLoading(false);
+    }
+  };
   
-      // Fetch the document snapshot from the query
+  const saveDetails = async (imageUrl) => {
+    try {
+      const q1 = query(collection(db, "passengers"), where("uid", "==", userId));
       const querySnapshot = await getDocs(q1);
   
       if (!querySnapshot.empty) {
-        // Assuming there is only one document per userId
         const docRef = querySnapshot.docs[0].ref;
-  
-        // Update the document with new data
         await updateDoc(docRef, {
-          firstName: firstname,
-          lastName: lastname,
-          email: email,
-          gender: gender,
-          phoneNumber: contact,
-          imageUrl: imageUrl,
+          firstName: firstname !== '' ? firstname : previousFirstName,
+          lastName: lastname !== '' ? lastname : previousLastName,
+          email: email !== '' ? email : previousemail,
+          gender: gender !== '' ? gender : previousgender,
+          phoneNumber: contact !== '' ? contact : previousphoneNumber,
+          profileImage: imageUrl !== '' ? imageUrl : userimge, 
         });
   
         ToastAndroid.show('Profile Updated', ToastAndroid.LONG);
@@ -103,18 +124,12 @@ return () => {
         ToastAndroid.show('No matching document found.', ToastAndroid.LONG);
       }
     } catch (err) {
-      console.log(err);
+      console.error(err);
       ToastAndroid.show('An Error Occurred: ' + err.message, ToastAndroid.LONG);
-    } finally {
-      setLoading(false);
     }
-  }
-  useEffect(() => {
-    navigation.setOptions({
-      headerShown: true,
-      headerTitle:'Update Profile'
-    });
-  }, []);
+  };
+  
+
   return (
     <View
       style={{
@@ -129,41 +144,102 @@ return () => {
           width: "100%",
         }}
       >
+       {userimge ? (
+        <View
+          style={{
+            width: 'auto',
+            height: 'auto',
+            marginBottom: 10,
+            overflow: 'hidden', 
+            display:'flex',
+            justifyContent:"center",
+            alignItems:"center"
+          }}
+        >
+          <Image
+            source={{ uri: userimge }}
+            style={{
+              width: 100,
+              height: 100,
+              borderRadius: 99,
+            }}
+            resizeMode="cover"
+          />
+        </View>
+      ) : (
+        <View
+          style={{
+            width: 'auto',
+            height: 'auto',
+            marginBottom: 10,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <View
+          style={{
+            width:100,
+            height:100,
+            borderRadius: 99,
+            backgroundColor: "#FFB41A",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+          >
+          <Text
+            style={{
+              fontSize: 20,
+              color: "white",
+              fontWeight: "bold",
+            }}
+            >
+            {previousFirstName}
+          </Text>
+            </View>
+        </View>
+      )}
           <View style={styles.wrapper}>
           <Ionicons name="person" size={20} color="#3D8ABE" />
-          <TextInput placeholder="First Name" placeholderTextColor="#3D8ABE" 
+          <TextInput placeholder={previousFirstName} placeholderTextColor="#3D8ABE" 
            onChangeText={(value) => setFirstName(value)}
+           style={{width:"90%", height:50}}
           />
         </View>
        
         <View style={styles.wrapper}>
           <Ionicons name="person" size={20} color="#3D8ABE" />
-          <TextInput placeholder="Last Name" placeholderTextColor="#3D8ABE" 
+          <TextInput placeholder={previousLastName} placeholderTextColor="#3D8ABE" 
            onChangeText={(value) => setLastName(value)}
+           style={{width:"90%", height:50}}
           />
         </View>
         <View style={styles.wrapper}>
           <Ionicons name="call" size={20} color="#3D8ABE" />
           <TextInput
-            keyboardType="tel"
-            placeholder="Phone Number"
+          style={{width:"90%", height:50}}
+            keyboardType="numbers-and-punctuation"
+            placeholder={previousphoneNumber}
             placeholderTextColor="#3D8ABE"
             onChangeText={(value) => setContact(value)}
           />
         </View>
         <View style={styles.wrapper}>
           <Ionicons name="people" size={20} color="#3D8ABE" />
-          <TextInput placeholder="Gender" placeholderTextColor="#3D8ABE" 
+          <TextInput placeholder={previousgender} placeholderTextColor="#3D8ABE"  
            onChangeText={(value) => setGender(value)}
+           style={{width:"90%", height:50}}
           />
         </View>
         <View style={styles.wrapper}>
           <Ionicons name="mail" size={20} color="#3D8ABE" />
           <TextInput
             keyboardType="email"
-            placeholder="Email"
+            placeholder={previousemail}
             placeholderTextColor="#3D8ABE"
             onChangeText={(value) => setEmail(value)}
+            style={{width:"90%", height:50}}
           />
         </View>
        
@@ -208,7 +284,7 @@ return () => {
             </Text>
           </TouchableOpacity>
         </View>
-              {!imageUri ? <Ionicons name="image"  size={150}/>:<Image source={{ uri: imageUri }} style={styles.image} />}
+              {!imageUri ? <Ionicons name="image"  size={100}/>:<Image source={{ uri: imageUri }} style={styles.image} />}
       </View>
   );
 }
@@ -245,8 +321,8 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   image: {
-    width: 200,
-    height: 200,
+    width: 100,
+    height: 100,
     marginTop:5,
     borderRadius:20
   },

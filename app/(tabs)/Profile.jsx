@@ -23,16 +23,17 @@ const Profile = () => {
   const [email, setEmail] = useState('')
   useEffect(()=>{
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      const id = user.uid
-      const q1 = query(collection(db, "passengers"),where("uid", "==", id));
-      const unsubscribeSnapshot = onSnapshot(q1, (snapShot) => {
-     
+      if (user) {
+        const id = user.uid
+        const q1 = query(collection(db, "passengers"),where("uid", "==", id));
+        const unsubscribeSnapshot = onSnapshot(q1, (snapShot) => {
           setLoading(true)
           snapShot.docs.forEach((doc) => {
             list=(doc.data())
+            console.log(list)
           });
-          if (list.imageUrl) {
-            setUserImageUrl(list.imageUrl);
+          if (list.profileImage) {
+            setUserImageUrl(list.profileImage);
           }
           setEmail(list.email)
           setFirstName(list.firstName)
@@ -40,11 +41,17 @@ const Profile = () => {
           setGender(list.gender)
           setPhoneNumber(list.phoneNumber)
           setLoading(false)
-      
-      });
-      return () => {
-        unsubscribeSnapshot();
-      };
+        });
+        return () => {
+          unsubscribeSnapshot();
+        };
+      }else {
+        setEmail(null)
+        setFirstName(null)
+        setLastName(null)
+        setGender(null)
+        setPhoneNumber(null)
+      }
 })
 return () => {
   unsubscribe();

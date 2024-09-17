@@ -1,10 +1,10 @@
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View, ToastAndroid,PermissionsAndroid } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View, ToastAndroid,PermissionsAndroid,Alert } from 'react-native';
 import React, { useState,useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import { auth, db } from "./../../configs/FirebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { serverTimestamp,setDoc,doc } from "firebase/firestore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Signup = () => {
@@ -32,29 +32,41 @@ const Signup = () => {
     ])
     return granted;
   }
-
+  const validateInputs = () => {
+    if (!firstname || !lastname || !contact || !gender || !email || !password) {
+      Alert.alert('Error', 'All fields are required!');
+      return false;
+    }if(password.length < 6){
+      Alert.alert('Password should be greater than 6');
+      return false;
+    }
+    return true;
+  };
   const createnewuser = async () => {
-    setLoading(true);
-    console.log(firstname, lastname, gender, email, contact);
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      await AsyncStorage.setItem('user', JSON.stringify(user));
-      await addDetails(user.uid);
-      ToastAndroid.show("Sign up Successfully", ToastAndroid.LONG);
-      router.push("home");
-    } catch (error) {
-      setLoading(false);
-      ToastAndroid.show(error.message, ToastAndroid.LONG);
-    } finally {
-      setLoading(false);
+    if (validateInputs()){
+
+      setLoading(true);
+      console.log(firstname, lastname, gender, email, contact);
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        await AsyncStorage.setItem('user', JSON.stringify(user));
+        await addDetails(user.uid);
+        ToastAndroid.show("Sign up Successfully", ToastAndroid.LONG);
+        router.push("home");
+      } catch (error) {
+        setLoading(false);
+        ToastAndroid.show(error.message, ToastAndroid.LONG);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   const addDetails = async (uid) => {
     try {
-      await addDoc(collection(db, "passengers"), {
-        timeStamps: serverTimestamp(),
+      await setDoc(doc(db, "passengers", contact), {
+        createdAt: serverTimestamp(),
         firstName: firstname,
         lastName: lastname,
         email: email,
@@ -63,6 +75,8 @@ const Signup = () => {
         password: password,
         solarCredit: 0,
         uid: uid,
+        tokens:{},
+        verified:'false'
       });
     } catch (error) {
       console.log("Error adding document: ", error);

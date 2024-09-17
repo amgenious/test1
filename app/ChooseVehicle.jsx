@@ -46,6 +46,7 @@ export default function ChooseVehicle() {
       snapShot.docs.forEach((doc) => {
         list=(doc.data())
       });
+      console.log(list.solarCredit)
       setDetails(list);
       setGettingSelf(false)
     }catch(error){

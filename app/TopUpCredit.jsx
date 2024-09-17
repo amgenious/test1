@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, ToastAndroid } from 'react-native'
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, ToastAndroid, Button } from 'react-native'
 import React, { useEffect,useState } from "react";
 import { useNavigation, useRouter } from 'expo-router';
 import { Ionicons } from "@expo/vector-icons";
@@ -19,7 +19,7 @@ const TopUpCredit=()=> {
     const [gettingSelf, setGettingSelf] = useState(true)
     const [sending, setSending] = useState(false)
     const [error, setError] = useState('');
-  
+    const [bigid, setBigid] = useState(null); 
     useEffect(() => {
         navigation.setOptions({
           headerShown: true,
@@ -35,6 +35,7 @@ const TopUpCredit=()=> {
       useEffect(()=>{
         const unsubscribe = onAuthStateChanged(auth, (user) => {
           const id = user.uid
+          setBigid(id);
           const q1 = query(collection(db, "passengers"),where("uid", "==", id));
           const unsubscribeSnapshot = onSnapshot(q1, (snapShot) => {
             try{
@@ -91,14 +92,18 @@ const TopUpCredit=()=> {
               credit: parseInt(amount),
               data:{data}
             });
-            const docQuery = query(collection(db, "passengers"), where("uid", "==", id));
-            const querySnapshot = await getDocs(docQuery);
-            querySnapshot.forEach(async (docSnapshot) => {
-              const docRef = doc(db, "passengers", docSnapshot.id);
-              await updateDoc(docRef, {
-                solarCredit: parseInt(amount),
-              });
-            });
+              const docQuery = query(collection(db, "passengers"), where("uid", "==", bigid));
+              const querySnapshot = await getDocs(docQuery);
+              querySnapshot.forEach(async (docSnapshot) => {
+                const docRef = doc(db, "passengers", docSnapshot.id);
+                const currentData = docSnapshot.data();
+                const currentCredit = currentData.solarCredit ? parseInt(currentData.solarCredit) : 0;
+                const updatedCredit = currentCredit + parseInt(amount);
+                await updateDoc(docRef, {
+                    solarCredit: updatedCredit,
+                  });
+                });
+            console.log("Transaction Successfully");
             ToastAndroid.show("Transaction Successfully", ToastAndroid.LONG);
           } catch (error) {
             console.log("Error adding document: ", error);
@@ -128,10 +133,19 @@ const TopUpCredit=()=> {
         paddingTop:30
       }}
       >
+        <Text
+        style={{
+          fontWeight:"bold",
+          fontSize:20,
+          textAlign:"center",
+          marginBottom:10,
+          color:'#3D8ABE'
+        }}
+        >Please Enter an Amount from Ghc10 and above</Text>
         <View style={styles.wrapper}>
           <Ionicons name="cash" size={20} color="#3D8ABE" />
           <TextInput
-            keyboardType="tel"
+            keyboardType="decimal-pad"
             placeholder="Enter Amount in GHc"
             placeholderTextColor="#3D8ABE"
             style={styles.input}
@@ -152,8 +166,8 @@ const TopUpCredit=()=> {
   onRedirect={handleOnRedirect}
   options={{
     tx_ref: generateTransactionRef(10),
-    // authorization: 'FLWPUBK_TEST-3b4f6d066955192f3617234c9eeea393-X',
-    authorization: process.env.EXPO_PUBLIC_FLUTTERWAVE_PUBLISHABLE_KEY,
+    authorization: 'FLWPUBK_TEST-3b4f6d066955192f3617234c9eeea393-X',
+    // authorization: process.env.EXPO_PUBLIC_FLUTTERWAVE_PUBLISHABLE_KEY,
     customer: {
       email: details.email
     },
@@ -188,6 +202,15 @@ const TopUpCredit=()=> {
 />
 }
         </View>
+        <Text
+        style={{
+          fontWeight:"bold",
+          fontSize:20,
+          textAlign:"center",
+          marginTop:10,
+          color:'#3D8ABE'
+        }}
+        >Please note Ghc 10 = 10 credits</Text>
       </View>
       }
     </View>

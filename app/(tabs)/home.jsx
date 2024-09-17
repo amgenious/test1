@@ -1,13 +1,15 @@
 import MapView, {Marker } from 'react-native-maps';
-import {  StyleSheet, Text,View,PermissionsAndroid, Dimensions, Image } from 'react-native';
+import {  StyleSheet, Text,View,PermissionsAndroid, Dimensions, Image,ToastAndroid } from 'react-native';
 import { Link } from 'expo-router';
 import { Ionicons } from "@expo/vector-icons";
 import React,{useEffect,useState} from 'react'
-import {collection,query, where,onSnapshot, } from "firebase/firestore";
-import {db} from "../../configs/FirebaseConfig"
+import {collection,query, where,onSnapshot,getDocs,updateDoc } from "firebase/firestore";
+import {db,auth} from "../../configs/FirebaseConfig"
+import { onAuthStateChanged } from "firebase/auth";
 
 const home = () => {
     const [data, setData] = useState([])
+    const [unqid, setUnqid] = useState(null)
     const colRef = collection(db, "riders");
     const INITIAL_REGION={
         latitude:5.562989,
@@ -15,6 +17,42 @@ const home = () => {
         latitudeDelta:0.0922,
         longitudeDelta:0.0421
       }
+
+      useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            setUnqid(user.uid);
+            const email = user.email;
+            const q1 = query(collection(db, "passengers"), where("email", "==", email));
+            const querySnapshot = await getDocs(q1);
+    
+            if (!querySnapshot.empty) {
+              const docRef = querySnapshot.docs[0].ref;
+              const passengerData = querySnapshot.docs[0].data();
+    
+              if (!passengerData.uid || passengerData.uid !== user.uid) {
+               
+                await updateDoc(docRef, {
+                  uid: user.uid
+                });
+                ToastAndroid.show('UID updated successfully.', ToastAndroid.LONG);
+              } else {
+              }
+            } else {
+              ToastAndroid.show('No matching document found.', ToastAndroid.LONG);
+            }
+          } else {
+            setUnqid(null);
+          }
+        });
+    
+        return () => {
+          unsubscribe();
+        };
+      }, []);
+    
+
+
       useEffect(() => {
         requestloctionPermission()
         driversonline()

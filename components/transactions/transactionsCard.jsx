@@ -21,7 +21,18 @@ const TransactionsCard = ({transactions}) => {
       }}>
         <View style={{display:"flex", flexDirection:"row", justifyContent:"space-between",marginBottom:2}}>
               <Text style={{fontSize:17,}}>Ref id: {transactions.data.data.tx_ref}</Text>
-              <Text style={{fontSize:17,backgroundColor:"#FFB41A",padding:3, borderRadius:5, color:"white"}}>Status: {transactions.status}</Text>
+              <Text
+  style={{
+    fontSize: 17,
+    backgroundColor: transactions.status === "cancelled" ? "red" : transactions.status === "successful" ? "green" : "#FFB41A", // Default color if status is neither "cancelled" nor "successful"
+    padding: 3,
+    borderRadius: 5,
+    color: "white"
+  }}
+>
+  Status: {transactions.status}
+</Text>
+
           </View>
               <Text style={{fontSize:17, backgroundColor:"green",padding:3, borderRadius:5, width:110,color:"white", marginBottom:5}}>Amount Paid: {transactions.amount}</Text>
               <Text style={{fontSize:17,backgroundColor:"#3D8ABE",padding:3,borderRadius:5, width:130,color:"white",marginBottom:5}}>Credits Obtained: {transactions.credit}</Text>
