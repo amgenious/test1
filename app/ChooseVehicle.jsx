@@ -21,11 +21,18 @@ export default function ChooseVehicle() {
   const router = useRouter();
   const [rating,setRating] = useState(4);
   const [ratingLoad,setRatingLoad] = useState(false);
+  const [cancelmodal,setCancelModal] = useState(false);
+  const [solarCredits,setSolarCedits] = useState(null);
+  const [unqueid,setUnqueid] = useState(null);
+  const [firstName,setFirstName] = useState(null);
+  const [lastName,setLastName] = useState(null);
+  const [email,setEmail] = useState(null);
+  const [phoneNumber,setPhoneNumber] = useState(null);
+  const [profileImage,setProfileImage] = useState(null);
   const [searching,setSearching] = useState(false);
   const [loading, setLoading] = useState(false)
   const [sending, setSending] = useState(false)
   const [gettingSelf, setGettingSelf] = useState(false)
-  const [details, setDetails] = useState('')
   const [drivers, setDrivers] = useState()
   const [distance, setDistance] = useState('');
   const [duration, setDuration] = useState('');
@@ -46,8 +53,12 @@ export default function ChooseVehicle() {
       snapShot.docs.forEach((doc) => {
         list=(doc.data())
       });
-      console.log(list.solarCredit)
-      setDetails(list);
+      setSolarCedits(list.solarCredit)
+      setUnqueid(list.uid)
+      setFirstName(list.firstName)
+      setLastName(list.lastName)
+      setEmail(list.email)
+      setProfileImage(list.profileImage)
       setGettingSelf(false)
     }catch(error){
       setGettingSelf(false)
@@ -137,20 +148,23 @@ return () => {
       return null;
     }
   };
-  useEffect(()=>{
-    const timer = setTimeout(() => {
-      ToastAndroid.show('No driver Responded',ToastAndroid.LONG)
-      datatobase()
-      setSearching(false);
-      setSending(false);
-     
-    }, 10000); 
-    return () => clearTimeout(timer);
-  },[])
+ 
 
-
+const showcancelmodal = () =>{
+  setCancelModal(true)
+}
+const hideshowcancelmodal = () =>{
+  setCancelModal(false)
+}
+const canceltrip = () =>{
+  ToastAndroid.show('Trip Cancelled',ToastAndroid.LONG)
+       datatobase()
+       setSearching(false);
+       setSending(false);
+       setCancelModal(false)
+}
 const checkpaidstatus = async()=>{
-  if(checked === 'SolarCredit' && list.solarCredit < newprice){
+  if(checked === 'SolarCredit' && solarCredits < newprice){
     setModal(true)  
     console.log("passed here")
     setSending(false)
@@ -165,7 +179,6 @@ const newprice = parseFloat(distance) * parseFloat(duration)
   const goSolar =async ()=>{
     setSending(true)
     setSearching(true)
-    
     }
     const loadingoff =()=>{
       // setRatingLoad(false)
@@ -178,7 +191,7 @@ const newprice = parseFloat(distance) * parseFloat(duration)
       try{
         await addDoc(collection(db,'passengerRequests'),{
           timeStamps: serverTimestamp(),
-          clientID:list.uid,
+          clientID:unqueid,
           destination:{
             name:destinationname,
             location:{
@@ -205,11 +218,11 @@ const newprice = parseFloat(distance) * parseFloat(duration)
             status:"cancelled"
           }],
           userDetails:{
-            email:list.email,
-            firstName:list.firstName,
-            lastName:list.lastName,
-            phoneNumber:list.phoneNumber,
-            profileImage:"",
+            email:email,
+            firstName:firstName,
+            lastName:lastName,
+            phoneNumber:phoneNumber,
+            profileImage:profileImage,
           },
           driverDetails:{
             id:"",
@@ -316,9 +329,22 @@ const newprice = parseFloat(distance) * parseFloat(duration)
             backgroundColor:"white",
             width:"100%",
             height:"auto",
-            padding:5,
+            padding:10,
             borderRadius:10
           }}>
+          <View style={{
+            position:"relative",
+            width:"100%",
+            display:"flex",
+            flexDirection:"column",
+            alignItems:"flex-end"
+          }}>
+            <TouchableOpacity
+            onPress={showcancelmodal}
+            >
+              <Ionicons name="close" size={40} color="red"/>
+            </TouchableOpacity>
+          </View>
             <Ionicons name="search" size={50} color="#3D8ABE" style={{
               textAlign:"center",
               padding:10
@@ -329,6 +355,58 @@ const newprice = parseFloat(distance) * parseFloat(duration)
               fontWeight:"bold",
               color:"#3D8ABE",marginBottom:10
             }}>Searching for Solar Taxi near you please wait</Text>
+          </View>
+      </View>:(
+        <View style={{
+          display:"none"
+        }}></View>
+      )
+}
+     { cancelmodal ?
+      <View style={{
+        position: "absolute",
+        zIndex: 15,
+        height:"100%",
+        width:"100%",
+        display:"flex",
+        flexDirection:"column",
+        justifyContent:"center",
+        alignItems:"center",
+        padding:20, 
+      }}>
+          <View style={{
+            backgroundColor:"white",
+            width:"100%",
+            height:200,
+            padding:5,
+            borderRadius:10,
+            display:"flex",
+            justifyContent:"center",
+            alignItems:"center"
+          }}>
+            <Text style={{
+              textAlign:"center",
+              fontSize:30,
+              fontWeight:"bold",
+              color:"#3D8ABE",marginBottom:10,marginTop:20    
+            }}>Do you want to cancel the trip?</Text>
+            <View style={{
+              display:"flex",
+              flexDirection:"row",
+              gap:30,
+              width:"100%",
+              justifyContent:"center",
+              alignItems:"center",
+              marginTop:5,
+              marginBottom:10
+            }}>
+              <TouchableOpacity onPress={canceltrip}>
+                <Text style={{fontSize:25,color:"#3D8ABE", fontWeight:"bold"}}>Yes</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={hideshowcancelmodal}>
+                  <Text style={{fontSize:25, color:"red", fontWeight:"bold"}}>No</Text>
+              </TouchableOpacity>
+            </View>
           </View>
       </View>:(
         <View style={{
